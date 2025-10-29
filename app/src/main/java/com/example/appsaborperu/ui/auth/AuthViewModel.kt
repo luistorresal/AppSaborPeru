@@ -45,7 +45,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val user = userRepo.login(email, password)
             _loginState.value = if (user != null) {
-                LoginState.Success(user.displayName)
+                LoginState.Success(user.nombre)
             } else {
                 LoginState.Error("Credenciales incorrectas")
             }
