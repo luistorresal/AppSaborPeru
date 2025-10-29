@@ -5,14 +5,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import com.example.appsaborperu.ui.auth.LoginScreen
+import androidx.navigation.compose.rememberNavController
 import com.example.appsaborperu.theme.AppSaborPeruTheme
-
-
-
-
-
-// Clase principal que extiende de ComponentActivity
+import com.example.appsaborperu.ui.navigation.AppNavGraph
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,13 +15,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             AppSaborPeruTheme {
                 Surface(color = MaterialTheme.colorScheme.background) {
-                    // Mostramos la pantalla de Login al iniciar la app
-                    LoginScreen(
-                        onSuccess = { userName ->
-                            // Aquí puedes navegar a otra pantalla (por ahora mostramos por consola)
-                            println("✅ Login correcto. Usuario: $userName")
-                        }
-                    )
+                    val navController = rememberNavController()
+                    AppNavGraph(navController)
                 }
             }
         }
