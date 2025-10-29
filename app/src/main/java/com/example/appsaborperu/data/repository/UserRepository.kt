@@ -32,7 +32,7 @@ class UserRepository(
                     role = "user"
                 ),
                 UserEntity(
-                    id = 0,
+                    id = 1,
                     nombre = "Karla",
                     apellido = "Blanco",
                     dni = "87654321",
@@ -41,7 +41,7 @@ class UserRepository(
                     role = "user"
                 ),
                 UserEntity(
-                    id = 0,
+                    id = 2,
                     nombre = "Invitado",
                     apellido = "SaborPeru",
                     dni = "00000000",
