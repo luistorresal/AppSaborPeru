@@ -73,7 +73,17 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.compose.material3:material3:1.3.0")
 
+    // --- Retrofit para API REST (recomendado) ---
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
+    // --- MySQL Connector (conexión directa - opcional) ---
+    // Nota: Para producción, se recomienda usar Retrofit con un backend API REST
+    implementation("com.mysql:mysql-connector-j:8.3.0")
 
+    // --- Gson para serialización JSON ---
+    implementation("com.google.code.gson:gson:2.10.1")
 
 }

@@ -48,22 +48,22 @@ class CartRepository(
 
     /** Incrementa la cantidad de un ítem específico. */
     suspend fun inc(itemId: Int) {
-        // Cargamos el item por id: como el DAO no expone getById, lo resolvemos reusando getItem
-        // (alternativa simple: el ViewModel ya conoce el item actual y pasa el quantity + 1).
-        // Aquí asumimos que el VM nos pasa el objeto completo:
-        // Mejor opción: expón un método dedicado si lo necesitas.
-        // Para mantenerlo simple, dejamos inc/dec como helpers para el VM (ver dec()).
-        // -> Implementación real se hace desde el VM con update(copy(quantity + 1)).
-        throw NotImplementedError("Usar update() con el item actual desde el ViewModel (copy(quantity+1)).")
+        val item = cartDao.getById(itemId) ?: return
+        cartDao.update(item.copy(quantity = item.quantity + 1))
     }
 
     /** Decrementa cantidad; si llega a 0, elimina el ítem. */
-    suspend fun dec(itemId: Int, currentQuantity: Int) {
-        if (currentQuantity <= 1) {
+    suspend fun dec(itemId: Int, currentQuantity: Int? = null) {
+        val item = cartDao.getById(itemId) ?: return
+        
+        // Si se proporciona currentQuantity, usarlo para optimización
+        // Si no, obtener la cantidad del item
+        val quantity = currentQuantity ?: item.quantity
+        
+        if (quantity <= 1) {
             cartDao.delete(itemId)
         } else {
-            // Igual que inc(), esto normalmente se hace con el objeto actual.
-            throw NotImplementedError("Usar update() con el item actual desde el ViewModel (copy(quantity-1)).")
+            cartDao.update(item.copy(quantity = item.quantity - 1))
         }
     }
 

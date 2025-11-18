@@ -25,6 +25,10 @@ interface CartDao {
     @Query("SELECT * FROM cart_items WHERE userId = :userId AND productId = :productId LIMIT 1")
     suspend fun getItem(userId: Int, productId: Int): CartItemEntity?
 
+    /** Obtiene un ítem del carrito por su ID */
+    @Query("SELECT * FROM cart_items WHERE id = :itemId LIMIT 1")
+    suspend fun getById(itemId: Int): CartItemEntity?
+
     /** Inserta un ítem (nuevo producto en el carrito) */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(item: CartItemEntity)
