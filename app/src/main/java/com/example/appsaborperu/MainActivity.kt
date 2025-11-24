@@ -6,7 +6,6 @@ import androidx.activity.compose.setContent
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.navigation.compose.rememberNavController
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.navigation.compose.rememberNavController
 import com.example.appsaborperu.theme.AppSaborPeruTheme
@@ -21,11 +20,14 @@ class MainActivity : ComponentActivity() {
                 Surface(color = MaterialTheme.colorScheme.background) {
                     val navController = rememberNavController()
                     AppNavGraph(navController)
-                Surface(color = MaterialTheme.colorScheme.background) {
-                    val navController = rememberNavController()
-                    AppNavGraph(navController)
+                    Surface(color = MaterialTheme.colorScheme.background) {
+                        val navController = rememberNavController()
+                        AppNavGraph(navController)
+                    }
                 }
             }
         }
     }
-}
+} // Falta esta llave
+
+
