@@ -12,22 +12,22 @@ import kotlinx.coroutines.launch
 
 /**
  * ViewModel encargado del login.
- * - Inicializa la base de datos Room.
- * - Carga usuarios por defecto (3 iniciales).
- * - Valida las credenciales al iniciar sesión.
+ * Solo permite acceso a los 3 usuarios autorizados:
+ * - marines@saborperu.cl (admin)
+ * - claudio@saborperu.cl (admin)
+ * - luis@saborperu.cl (cliente)
  */
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
-    // Instancia local de la base de datos y repositorio
     private val db = Room.databaseBuilder(
         application,
         AppDatabase::class.java,
         "saborperu.db"
-    ).build()
+    ).fallbackToDestructiveMigration()  // Recrear BD si hay cambios
+    .build()
 
     private val userRepo = UserRepository(db.userDao())
 
-    // Estados observables para la UI
     private val _loginState = MutableStateFlow<LoginState>(LoginState.Idle)
     val loginState: StateFlow<LoginState> = _loginState
 
@@ -39,24 +39,35 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
-     * Valida credenciales simples (email + password)
+     * Valida credenciales. Solo los 3 usuarios autorizados pueden acceder.
      */
     fun login(email: String, password: String) {
         viewModelScope.launch {
-            val user = userRepo.login(email, password)
+            // Validar formato de email
+            if (email.isBlank() || password.isBlank()) {
+                _loginState.value = LoginState.Error("Complete todos los campos")
+                return@launch
+            }
+            
+            val user = userRepo.login(email.trim().lowercase(), password)
             _loginState.value = if (user != null) {
-                LoginState.Success(user.nombre)
+                // Éxito: pasar nombre, email y rol
+                LoginState.Success(
+                    userName = user.nombre,
+                    userEmail = user.email,
+                    userRole = user.role
+                )
             } else {
-                LoginState.Error("Credenciales incorrectas")
+                LoginState.Error("Credenciales incorrectas o usuario no autorizado")
             }
         }
     }
 
     /**
-     * Ingresar como invitado (sin validación)
+     * Resetear estado de login (para cerrar sesión)
      */
-    fun loginAsGuest() {
-        _loginState.value = LoginState.Success("Invitado")
+    fun logout() {
+        _loginState.value = LoginState.Idle
     }
 }
 
@@ -65,6 +76,10 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
  */
 sealed class LoginState {
     object Idle : LoginState()
-    data class Success(val userName: String) : LoginState()
+    data class Success(
+        val userName: String,
+        val userEmail: String,
+        val userRole: String
+    ) : LoginState()
     data class Error(val message: String) : LoginState()
 }

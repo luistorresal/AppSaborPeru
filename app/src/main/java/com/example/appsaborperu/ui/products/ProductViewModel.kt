@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 /**
  * ViewModel para la gestión de productos - CRUD vía API REST.
  * Conecta la UI con el backend mediante Retrofit.
+ * Precios en CLP (pesos chilenos).
  */
 class ProductViewModel : ViewModel() {
 
@@ -68,18 +69,18 @@ class ProductViewModel : ViewModel() {
 
     // ==================== CREATE ====================
 
-    /** Crea un nuevo producto vía API. */
+    /** Crea un nuevo producto vía API. Precio en CLP. */
     fun createProduct(
         name: String,
         description: String,
-        price: Double,
+        price: Double,  // Precio en CLP (ej: 12000)
         isAvailable: Boolean = true
     ) {
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
             try {
-                val priceClp = (price * 100).toInt()
+                val priceClp = price.toInt()  // Precio directo en CLP
                 val request = ProductRequest(
                     name = name,
                     description = description,
@@ -119,14 +120,14 @@ class ProductViewModel : ViewModel() {
         id: Int,
         name: String,
         description: String,
-        price: Double,
+        price: Double,  // Precio en CLP
         isAvailable: Boolean
     ) {
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
             try {
-                val priceClp = (price * 100).toInt()
+                val priceClp = price.toInt()  // Precio directo en CLP
                 val request = ProductRequest(
                     name = name,
                     description = description,
@@ -187,7 +188,7 @@ class ProductViewModel : ViewModel() {
                 CartItem(
                     productId = product.id,
                     productName = product.name,
-                    productPrice = product.priceClp / 100.0,
+                    productPrice = product.priceClp.toDouble(),  // Precio en CLP
                     quantity = 1
                 )
             )
@@ -237,6 +238,6 @@ class ProductViewModel : ViewModel() {
 data class CartItem(
     val productId: Int,
     val productName: String,
-    val productPrice: Double,
+    val productPrice: Double,  // Precio en CLP
     val quantity: Int
 )

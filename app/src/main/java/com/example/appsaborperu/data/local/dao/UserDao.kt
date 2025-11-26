@@ -19,11 +19,19 @@ interface UserDao {
     @Query("SELECT * FROM users WHERE email = :email LIMIT 1")
     suspend fun getByEmail(email: String): UserEntity?
 
-    /** Inserta una lista de usuarios; ignora duplicados por email. */
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    /** Inserta un usuario; reemplaza si ya existe. */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(user: UserEntity)
+
+    /** Inserta una lista de usuarios; reemplaza duplicados. */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(users: List<UserEntity>)
 
     /** Cuenta cuántos usuarios existen en la tabla. */
     @Query("SELECT COUNT(*) FROM users")
     suspend fun count(): Int
+
+    /** Elimina todos los usuarios. */
+    @Query("DELETE FROM users")
+    suspend fun deleteAll()
 }

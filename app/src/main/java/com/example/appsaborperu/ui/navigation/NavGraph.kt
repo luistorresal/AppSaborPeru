@@ -5,8 +5,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.appsaborperu.ui.auth.LoginScreen
-import com.example.appsaborperu.ui.home.HomeScreen
 import com.example.appsaborperu.ui.products.ProductListScreen
+import java.net.URLDecoder
+import java.net.URLEncoder
 
 @Composable
 fun AppNavGraph(navController: NavHostController) {
@@ -14,26 +15,39 @@ fun AppNavGraph(navController: NavHostController) {
         navController = navController,
         startDestination = Routes.LOGIN
     ) {
+        // Pantalla de Login
         composable(Routes.LOGIN) {
             LoginScreen(
-                onSuccess = { userName ->
-                    navController.navigate("${Routes.HOME}/$userName")
+                onSuccess = { userName, userEmail, userRole ->
+                    // Codificar el email para la URL
+                    val encodedEmail = URLEncoder.encode(userEmail, "UTF-8")
+                    navController.navigate("${Routes.PRODUCT_LIST}/$userName/$encodedEmail/$userRole") {
+                        // Limpiar el back stack para que no pueda volver al login con back
+                        popUpTo(Routes.LOGIN) { inclusive = true }
+                    }
                 }
             )
         }
 
-        composable("${Routes.HOME}/{userName}") { backStackEntry ->
+        // Pantalla de Productos con información del usuario
+        composable("${Routes.PRODUCT_LIST}/{userName}/{userEmail}/{userRole}") { backStackEntry ->
             val userName = backStackEntry.arguments?.getString("userName") ?: ""
-            HomeScreen(
+            val userEmail = URLDecoder.decode(
+                backStackEntry.arguments?.getString("userEmail") ?: "", 
+                "UTF-8"
+            )
+            val userRole = backStackEntry.arguments?.getString("userRole") ?: ""
+            
+            ProductListScreen(
                 userName = userName,
-                onExploreClick = {
-                    navController.navigate(Routes.PRODUCT_LIST)
+                userEmail = userEmail,
+                userRole = userRole,
+                onLogout = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             )
-        }
-
-        composable(Routes.PRODUCT_LIST) {
-            ProductListScreen()
         }
     }
 }

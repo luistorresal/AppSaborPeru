@@ -6,61 +6,78 @@ import com.example.appsaborperu.data.local.entity.UserEntity
 /**
  * Repositorio de Usuarios.
  * - Expone login(email, password) para la pantalla de Login.
- * - Carga usuarios semilla si la tabla está vacía (3 usuarios).
- *
- * Nota: password en texto para demo. Puedes cambiar a hash más adelante.
+ * - Carga usuarios semilla (3 usuarios específicos).
  */
 class UserRepository(
     private val userDao: UserDao
 ) {
+    // Lista de usuarios autorizados
+    private val authorizedUsers = listOf(
+        UserEntity(
+            id = 0,
+            nombre = "Marines",
+            apellido = "Admin",
+            dni = "11111111",
+            email = "marines@saborperu.cl",
+            password = "123456",
+            role = "admin"
+        ),
+        UserEntity(
+            id = 0,
+            nombre = "Claudio",
+            apellido = "Admin",
+            dni = "22222222",
+            email = "claudio@saborperu.cl",
+            password = "123456",
+            role = "admin"
+        ),
+        UserEntity(
+            id = 0,
+            nombre = "Luis",
+            apellido = "Cliente",
+            dni = "33333333",
+            email = "luis@saborperu.cl",
+            password = "123456",
+            role = "cliente"
+        )
+    )
 
     /**
-     * Inserta los 3 usuarios por defecto SOLO si la tabla está vacía.
-     * Llamar una vez al iniciar la app (por ejemplo, en el AuthViewModel).
+     * Inserta los 3 usuarios autorizados.
+     * Limpia usuarios existentes y los vuelve a crear para asegurar datos correctos.
      */
     suspend fun seedIfEmpty() {
+        // Siempre asegurar que los 3 usuarios existan
         val count = userDao.count()
-        if (count == 0) {
-            val defaults = listOf(
-                UserEntity(
-                    id = 0,
-                    nombre = "Luis",
-                    apellido = "Torres",
-                    dni = "12345678",
-                    email = "luis@saborperu.cl",
-                    password = "123456",
-                    role = "user"
-                ),
-                UserEntity(
-                    id = 1,
-                    nombre = "Karla",
-                    apellido = "Blanco",
-                    dni = "87654321",
-                    email = "karla@saborperu.cl",
-                    password = "123456",
-                    role = "user"
-                ),
-                UserEntity(
-                    id = 2,
-                    nombre = "Invitado",
-                    apellido = "SaborPeru",
-                    dni = "00000000",
-                    email = "invitado@saborperu.cl",
-                    password = "123456",
-                    role = "guest"
-                )
-            )
-            userDao.insertAll(defaults)
+        if (count < 3) {
+            // Si hay menos de 3, limpiar y recrear
+            userDao.deleteAll()
+            userDao.insertAll(authorizedUsers)
         }
     }
 
     /**
-     * Valida credenciales básicas. Devuelve el usuario si son correctas, o null si no.
-     * Para "Entrar como invitado" no necesitas llamar a login; puedes crear un UserEntity
-     * temporal en el ViewModel con role = "guest".
+     * Valida credenciales contra los usuarios autorizados.
+     * Primero intenta en BD local, si no encuentra, valida contra lista hardcodeada.
      */
     suspend fun login(email: String, password: String): UserEntity? {
-        val user = userDao.getByEmail(email) ?: return null
-        return if (user.password == password) user else null
+        // Intentar buscar en BD
+        val userFromDb = userDao.getByEmail(email)
+        if (userFromDb != null && userFromDb.password == password) {
+            return userFromDb
+        }
+        
+        // Si no está en BD, validar contra lista autorizada y agregarlo
+        val authorizedUser = authorizedUsers.find { 
+            it.email.equals(email, ignoreCase = true) && it.password == password 
+        }
+        
+        if (authorizedUser != null) {
+            // Insertar el usuario si no existía
+            userDao.insert(authorizedUser)
+            return authorizedUser
+        }
+        
+        return null
     }
 }

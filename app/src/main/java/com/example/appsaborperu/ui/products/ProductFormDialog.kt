@@ -10,11 +10,13 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.example.appsaborperu.data.remote.api.ProductDto
+import com.example.appsaborperu.ui.theme.PeruRed
 
 /**
  * Diálogo para crear o editar un producto.
  * - Si product es null: modo crear
  * - Si product no es null: modo editar
+ * Precios en CLP (pesos chilenos)
  */
 @Composable
 fun ProductFormDialog(
@@ -27,7 +29,7 @@ fun ProductFormDialog(
     var name by remember { mutableStateOf(product?.name ?: "") }
     var description by remember { mutableStateOf(product?.description ?: "") }
     var priceText by remember { mutableStateOf(
-        if (product != null) (product.priceClp / 100.0).toString() else ""
+        if (product != null) product.priceClp.toString() else ""
     ) }
     var isAvailable by remember { mutableStateOf(product?.isAvailable ?: true) }
     
@@ -45,9 +47,9 @@ fun ProductFormDialog(
             nameError = null
         }
         
-        val price = priceText.toDoubleOrNull()
+        val price = priceText.toIntOrNull()
         if (price == null || price <= 0) {
-            priceError = "Ingrese un precio válido"
+            priceError = "Ingrese un precio válido en CLP"
             isValid = false
         } else {
             priceError = null
@@ -72,11 +74,11 @@ fun ProductFormDialog(
                 Text(
                     text = if (isEditMode) "✏️ Editar Producto" else "➕ Nuevo Producto",
                     style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.primary
+                    color = PeruRed
                 )
                 
                 Text(
-                    text = "Los cambios se guardarán en MySQL",
+                    text = "Los cambios se guardarán en la base de datos",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -95,7 +97,12 @@ fun ProductFormDialog(
                     isError = nameError != null,
                     supportingText = nameError?.let { { Text(it) } },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = PeruRed,
+                        focusedLabelColor = PeruRed,
+                        cursorColor = PeruRed
+                    )
                 )
                 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -108,26 +115,40 @@ fun ProductFormDialog(
                     placeholder = { Text("Describe el plato...") },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 2,
-                    maxLines = 3
+                    maxLines = 3,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = PeruRed,
+                        focusedLabelColor = PeruRed,
+                        cursorColor = PeruRed
+                    )
                 )
                 
                 Spacer(modifier = Modifier.height(12.dp))
                 
-                // Campo Precio
+                // Campo Precio en CLP
                 OutlinedTextField(
                     value = priceText,
                     onValueChange = { 
-                        priceText = it
-                        priceError = null
+                        // Solo permitir números
+                        if (it.all { char -> char.isDigit() } || it.isEmpty()) {
+                            priceText = it
+                            priceError = null
+                        }
                     },
-                    label = { Text("Precio (S/.)") },
-                    placeholder = { Text("Ej: 25.00") },
+                    label = { Text("Precio (CLP)") },
+                    placeholder = { Text("Ej: 12000") },
                     isError = priceError != null,
                     supportingText = priceError?.let { { Text(it) } },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    leadingIcon = { Text("S/.") }
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    leadingIcon = { Text("$") },
+                    trailingIcon = { Text("CLP") },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = PeruRed,
+                        focusedLabelColor = PeruRed,
+                        cursorColor = PeruRed
+                    )
                 )
                 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -144,7 +165,11 @@ fun ProductFormDialog(
                     )
                     Switch(
                         checked = isAvailable,
-                        onCheckedChange = { isAvailable = it }
+                        onCheckedChange = { isAvailable = it },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = PeruRed,
+                            checkedTrackColor = PeruRed.copy(alpha = 0.5f)
+                        )
                     )
                 }
                 
@@ -164,10 +189,11 @@ fun ProductFormDialog(
                     Button(
                         onClick = {
                             if (validate()) {
-                                val price = priceText.toDoubleOrNull() ?: 0.0
+                                val price = priceText.toIntOrNull()?.toDouble() ?: 0.0
                                 onSave(name, description, price, isAvailable)
                             }
-                        }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = PeruRed)
                     ) {
                         Text(if (isEditMode) "Guardar cambios" else "Crear producto")
                     }
@@ -195,7 +221,7 @@ fun DeleteConfirmDialog(
                 Text("¿Estás seguro que deseas eliminar \"$productName\"?")
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Esta acción eliminará el registro de MySQL.",
+                    text = "Esta acción no se puede deshacer.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error
                 )
